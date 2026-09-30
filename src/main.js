@@ -94,8 +94,20 @@ function renderMaterialCatalog(sceneKey = state.scene) {
 renderMaterialCatalog();
 
 let statusHideTimer = 0;
+function clearInteractionStatus() {
+  if (!els.status) return;
+  clearTimeout(statusHideTimer);
+  els.status.textContent = '';
+  els.status.classList.remove('is-visible');
+}
+
 if (els.status && typeof MutationObserver !== 'undefined') {
   const statusObserver = new MutationObserver(() => {
+    if (!els.status.textContent.trim()) {
+      clearTimeout(statusHideTimer);
+      els.status.classList.remove('is-visible');
+      return;
+    }
     els.status.classList.add('is-visible');
     clearTimeout(statusHideTimer);
     statusHideTimer = setTimeout(() => els.status.classList.remove('is-visible'), 2200);
@@ -723,9 +735,10 @@ function releasePointer(event) {
   if (wasMode === 'grab' || (wasMode === 'pinch' && !state.dualGrips.length)) preserveCurrentPull();
   state.mode = ''; state.pointerId = null; state.targetPress = 0; state.targetPull.set(0, 0, 0);
   state.wobble = .25 + values()[1] * (1.1 + MATERIALS[state.material].physics.wobble * .9); if (!shellTap) sound('release', releaseForce);
-  els.status.textContent = shellTap ? els.status.textContent : state.material === 'fruit' && !state.fruitShellCracked && wasMode === 'grab' && state.moved
+  els.status.textContent = shellTap ? '' : state.material === 'fruit' && !state.fruitShellCracked && wasMode === 'grab' && state.moved
     ? '糖衣很硬，先敲碎它'
     : wasMode === 'rotate' ? `${MATERIALS[state.material].zh}已转到新角度` : `${MATERIALS[state.material].zh}正在慢慢回弹`;
+  if (shellTap) clearInteractionStatus();
   try { canvas.releasePointerCapture(event.pointerId); } catch (_) {}
 }
 
@@ -962,14 +975,8 @@ function crackFruitShell(direction = state.grabDir, uv = state.grabUv) {
   dropFruitSugarChip(normal);
   sound('peel', .66 + state.fruitShellHits * .045);
   const remaining = Math.max(0, 6 - state.fruitShellHits);
-  if (!state.fruitShellCracked && !remaining) {
-    state.fruitShellCracked = true;
-    els.status.textContent = '糖衣沿边剥落，里面露出果肉';
-  } else if (state.fruitShellCracked) {
-    els.status.textContent = `糖衣继续剥落（第 ${state.fruitShellHits} 片）`;
-  } else {
-    els.status.textContent = `糖衣剥下一小片（还剩 ${remaining} 片）`;
-  }
+  if (!state.fruitShellCracked && !remaining) state.fruitShellCracked = true;
+  clearInteractionStatus();
 }
 
 function clearFruitShellChips() {
