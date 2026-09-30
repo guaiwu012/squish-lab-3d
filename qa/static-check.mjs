@@ -33,6 +33,7 @@ const checks = [
   ,['material acceptance targets are visible', html.includes('id="materialAcceptance"') && source.includes('material.acceptance') && acceptance.includes('啤酒瓶')]
   ,['breakable material lifecycle exists', source.includes('breakMaterialAtTap') && source.includes('spawnBreakFragments') && source.includes('materialBreakHits')]
   ,['expanded material audio profiles exist', ['clear-bubble', 'rubber-balloon', 'glass-bottle', 'kinetic-sand', 'ice-crack'].every(name => source.includes(name))]
+  ,['impact cracks are rendered at hit point', source.includes('addImpactCracks') && source.includes('LineBasicMaterial') && source.includes('state.grabPoint')]
 ];
 
 const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);

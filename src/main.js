@@ -446,10 +446,36 @@ function spawnBreakFragments(count = 8) {
   }
 }
 
+function addImpactCracks() {
+  if (!['beer', 'wax', 'ice'].includes(state.material)) return;
+  const normal = state.grabDir.clone().normalize();
+  const group = new THREE.Group();
+  group.position.copy(state.grabPoint).addScaledVector(normal, .018);
+  group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+  const color = state.material === 'ice' ? 0xf4fcff : state.material === 'beer' ? 0xf0ffe8 : 0x704126;
+  const rays = 3 + Math.floor(Math.random() * 3);
+  for (let index = 0; index < rays; index++) {
+    const angle = (index / rays) * Math.PI * 2 + (Math.random() - .5) * .5;
+    const length = .16 + Math.random() * .16;
+    const bend = new THREE.Vector3(Math.cos(angle) * length * .52, Math.sin(angle) * length * .52, 0);
+    const end = new THREE.Vector3(Math.cos(angle) * length, Math.sin(angle) * length, 0);
+    const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), bend, end]);
+    group.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, transparent: true, opacity: .88 }))); 
+    if (Math.random() > .35) {
+      const branch = end.clone().add(new THREE.Vector3((Math.random() - .5) * .1, (Math.random() - .5) * .1, 0));
+      const branchGeometry = new THREE.BufferGeometry().setFromPoints([bend, branch]);
+      group.add(new THREE.Line(branchGeometry, new THREE.LineBasicMaterial({ color, transparent: true, opacity: .7 })));
+    }
+  }
+  group.renderOrder = 8; modelRoot.add(group); fruitCracks.push(group);
+  if (fruitCracks.length > 18) { const oldest = fruitCracks.shift(); modelRoot.remove(oldest); disposeObject(oldest); }
+}
+
 function breakMaterialAtTap() {
   const profile = MATERIALS[state.material];
   if (!profile?.breakMode || state.materialBroken) return false;
   state.materialBreakHits++;
+  if (profile.breakMode === 'crack' || profile.breakMode === 'shatter') addImpactCracks();
   const required = profile.breakHits || 1;
   if (state.materialBreakHits < required) {
     sound('press', .38 + state.materialBreakHits * .12);
