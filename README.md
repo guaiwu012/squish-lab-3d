@@ -38,6 +38,10 @@ python3 -m http.server 4173 --directory dist
 
 然后打开 <http://localhost:4173>。
 
+## CloudBase 自动部署
+
+仓库已包含 GitHub Actions 工作流：推送到 `main` 或手动运行工作流时，会把 `dist/` 部署到 CloudBase 环境 `fay-d5gs45yh46ccad4d7`。首次启用前，请在 GitHub 仓库的 Settings → Secrets and variables → Actions 添加 `TCB_SECRET_ID` 和 `TCB_SECRET_KEY` 两个 Secrets；密钥只放在 GitHub Secrets 中，不要提交到代码。
+
 ## 交互
 
 - 拖动球体表面：局部形变
