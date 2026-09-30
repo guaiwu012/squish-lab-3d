@@ -49,7 +49,7 @@ const state = {
   startX: 0, startY: 0, lastX: 0, lastY: 0, lastMoveTime: 0, gestureSpeed: 0,
   rotationMode: false, rotationX: -.08, rotationY: .18, targetRotationX: -.08, targetRotationY: .18,
   rotationXVelocity: 0, rotationYVelocity: 0,
-  grabDir: new THREE.Vector3(0, 0, 1), grabUv: new THREE.Vector2(.5, .5), currentPull: new THREE.Vector3(),
+  grabDir: new THREE.Vector3(0, 0, 1), grabPoint: new THREE.Vector3(0, 0, 1.18), grabUv: new THREE.Vector2(.5, .5), currentPull: new THREE.Vector3(),
   targetPull: new THREE.Vector3(), pullVelocity: new THREE.Vector3(),
   press: 0, targetPress: 0, pressVelocity: 0, wobble: 0,
   touchPoints: new Map(), pinchStartDistance: 0, pinchStartPull: 0, pinchStartAngle: 0, pinchStartRotationY: 0,
@@ -598,8 +598,8 @@ function hitTest(clientX, clientY) {
 }
 
 function setGrabFromHit(hit) {
-  if (!surfaceMesh || !hit) { state.grabDir.set(0, 0, 1); state.grabUv.set(.5, .5); return; }
-  const local = surfaceMesh.worldToLocal(hit.point.clone()); state.grabDir.copy(local).normalize();
+  if (!surfaceMesh || !hit) { state.grabDir.set(0, 0, 1); state.grabPoint.set(0, 0, 1.18); state.grabUv.set(.5, .5); return; }
+  const local = surfaceMesh.worldToLocal(hit.point.clone()); state.grabPoint.copy(local); state.grabDir.copy(local).normalize();
   if (hit.uv) state.grabUv.copy(hit.uv);
 }
 
@@ -925,7 +925,7 @@ function paintFruitShellDamage(direction, radius = .14, uv = state.grabUv) {
   fruitShellDamageContext.restore(); fruitShellDamageTexture.needsUpdate = true;
 }
 
-function dropFruitSugarChip(direction) {
+function dropFruitSugarChip(direction, anchor = null) {
   const localDirection = direction.clone().normalize();
   const radius = 1.18 * 1.035; const patchAngle = .26 + Math.random() * .08;
   const geometry = new THREE.SphereGeometry(radius, 14, 10, -patchAngle / 2, patchAngle, Math.PI / 2 - patchAngle / 2, patchAngle);
@@ -948,7 +948,11 @@ function dropFruitSugarChip(direction) {
   peelEdge.position.copy(localDirection).multiplyScalar(.014);
   peelEdge.userData.fruitPeelEdge = true;
   chip.add(peelEdge);
-  chip.position.copy(modelRoot.localToWorld(localDirection.clone().multiplyScalar(radius)));
+  // Anchor the falling piece to the exact ray-hit point. Using only the
+  // normalized direction placed shards at the ideal sphere radius, which
+  // drifted away from the tapped spot after scale, wobble, or deformation.
+  const localAnchor = anchor?.clone() || localDirection.clone().multiplyScalar(radius);
+  chip.position.copy(modelRoot.localToWorld(localAnchor));
   chip.userData.fruitSugarChip = true; chip.userData.peelStyle = 'egg-shell';
   chip.quaternion.copy(modelRoot.getWorldQuaternion(new THREE.Quaternion())); chip.scale.copy(modelRoot.getWorldScale(new THREE.Vector3()));
   chip.renderOrder = 5; particlesRoot.add(chip); fruitShellChips.push(chip);
@@ -972,7 +976,7 @@ function crackFruitShell(direction = state.grabDir, uv = state.grabUv) {
   const damageRadius = clamp(.078 + Math.random() * .026 + Math.min(state.fruitShellHits, 8) * .002, .078, .12);
   paintFruitShellDamage(normal, damageRadius, uv);
   fruitShell.material.opacity = Math.max(.4, .56 - state.fruitShellHits * .026);
-  dropFruitSugarChip(normal);
+  dropFruitSugarChip(normal, state.grabPoint);
   sound('peel', .66 + state.fruitShellHits * .045);
   const remaining = Math.max(0, 6 - state.fruitShellHits);
   if (!state.fruitShellCracked && !remaining) state.fruitShellCracked = true;
