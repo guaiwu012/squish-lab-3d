@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#eeece4" />
+    <meta name="description" content="在可扩展的三维材质实验室里，触摸、拉扯和按压不同的虚拟材质。" />
+    <title>捏捏实验室 — SQUISH LAB</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23201f1b'/%3E%3Cpath d='M17 35c0-12 8-20 17-20s15 7 15 18c0 12-7 18-17 18S17 46 17 35Z' fill='%23d7ff64'/%3E%3Ccircle cx='39' cy='26' r='5' fill='%23fff' fill-opacity='.65'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="#playground" aria-label="捏捏实验室首页">
+        <span>SQUISH</span><span>LAB<span class="brand-dot">.</span></span>
+      </a>
+
+      <nav class="material-tabs" aria-label="选择材质">
+        <div class="scene-filter" id="sceneFilter" aria-label="选择场景"></div>
+        <div class="material-options" id="materialOptions" aria-label="选择材质"></div>
+      </nav>
+
+      <button class="sound-top" id="soundTop" type="button" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5Z"/><path class="sound-wave" d="M17 8.2c1.1 1 1.7 2.3 1.7 3.8S18.1 14.8 17 15.8"/></svg>
+        <span>声音开启</span>
+      </button>
+    </header>
+
+    <main id="playground" class="playground">
+      <section class="intro" aria-labelledby="materialTitle">
+        <p class="eyebrow">TACTILE OBJECT / <span id="materialNumber">01</span></p>
+        <h1 id="materialTitle"><span>Foam</span><em>Slime.</em></h1>
+        <p class="intro-copy" id="materialCopy">气泡被揉进柔软的胶里。<br />慢慢拉开，听它细碎地呼吸。</p>
+        <dl class="micro-stats" aria-label="互动统计">
+          <div><dt>互动</dt><dd id="pressCount">00</dd></div>
+          <div><dt>状态</dt><dd id="feelLabel">蓬松</dd></div>
+        </dl>
+      </section>
+
+      <section class="object-stage" aria-label="可互动的三维材质场景">
+        <div class="halo" aria-hidden="true"></div>
+        <canvas id="squishCanvas" width="720" height="720" tabindex="0" role="img" aria-label="真正的三维起泡胶球体。拖动表面局部塑形，拖动外圈旋转，按空格键挤压。"></canvas>
+        <div class="gesture-hint" id="gestureHint" aria-hidden="true">
+          <span class="gesture-dot"></span>
+          <span>拖表面塑形 · 外圈旋转 · 双指抓住两端拉开</span>
+        </div>
+        <div class="interaction-status" id="interactionStatus" aria-live="polite"></div>
+      </section>
+
+      <aside class="control-card" aria-label="材质控制">
+        <div class="card-heading">
+          <div>
+            <span class="label">当前材质</span>
+            <strong id="controlTitle">起泡胶</strong>
+          </div>
+          <span class="material-chip" id="materialChip">FOAM</span>
+        </div>
+
+        <label class="slider-row" for="softness">
+          <span><b>柔软度</b><output id="softnessValue">72</output></span>
+          <input id="softness" type="range" min="20" max="100" value="72" />
+        </label>
+        <label class="slider-row" for="bounce">
+          <span><b>回弹</b><output id="bounceValue">64</output></span>
+          <input id="bounce" type="range" min="20" max="100" value="64" />
+        </label>
+        <label class="slider-row" for="texture">
+          <span><b>声音颗粒</b><output id="textureValue">58</output></span>
+          <input id="texture" type="range" min="10" max="100" value="58" />
+        </label>
+
+        <div class="card-actions">
+          <button class="toggle" id="soundToggle" type="button" role="switch" aria-checked="true">
+            <span>声音</span><span class="toggle-track" aria-hidden="true"><span></span></span>
+          </button>
+          <button class="rotate-button" id="rotateToggle" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 7.8A8 8 0 1 0 20 14"/><path d="M19.2 7.8H15M19.2 7.8V3.6"/></svg>
+            <span>旋转</span>
+          </button>
+          <button class="reset-button" id="resetButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 9A8 8 0 1 1 4 14"/><path d="M4.8 9H9M4.8 9V4.8"/></svg>
+            复原
+          </button>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer-note">
+      <span id="footerIndex">01 / 04</span>
+        <span>为触摸与耳朵做的可扩展材质实验</span>
+      <span class="footer-line" aria-hidden="true"></span>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
