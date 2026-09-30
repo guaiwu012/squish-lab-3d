@@ -80,6 +80,7 @@ button { color: inherit; }
 
 .scene-filter, .material-options { display: flex; align-items: center; gap: 4px; }
 .scene-filter { padding: 0 4px 2px; border-bottom: 1px solid rgba(32,31,27,.1); }
+.scene-filter { overflow-x: auto; scrollbar-width: thin; }
 .scene-button {
   min-height: 24px;
   padding: 0 9px;
@@ -94,7 +95,7 @@ button { color: inherit; }
 }
 .scene-button:hover { color: var(--ink); background: rgba(255,255,255,.6); }
 .scene-button.is-active { color: var(--accent-ink); background: rgba(204,255,75,.7); }
-.material-options { min-height: 38px; }
+.material-options { min-height: 38px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
 
 .tab {
   min-height: 38px;
@@ -108,7 +109,7 @@ button { color: inherit; }
   transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 
-.material-options .tab { flex: 1 1 0; }
+.material-options .tab { flex: 0 0 auto; }
 
 .tab:hover { background: rgba(255,255,255,.62); }
 .tab.is-active {
@@ -312,6 +313,12 @@ button { color: inherit; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .11em;
+}
+.acceptance-note {
+  margin: 14px 0 0;
+  color: #5f5b52;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .slider-row { display: grid; gap: 10px; margin-top: 22px; }

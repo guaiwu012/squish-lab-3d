@@ -7,6 +7,7 @@ const css = read('dist/styles.css');
 const script = read('dist/script.js');
 const source = read('src/main.js');
 const iteration = read('ITERATION.md');
+const acceptance = read('ACCEPTANCE.md');
 
 const checks = [
   ['3D canvas exists', html.includes('id="squishCanvas"')],
@@ -28,6 +29,10 @@ const checks = [
   ['jelly sound is sparse and low', source.includes('sparse: one wet') && source.includes('bodyCut = 92') && source.includes('tail = .62')],
   ['audio outputs are reclaimed', source.includes('output.disconnect') && script.includes('activeAudioOutputs')],
   ['iteration targets are documented', iteration.includes('连续 50 次') && iteration.includes('真实手势回归')]
+  ,['expanded material registry exists', ['bubbleBall', 'balloon', 'beer', 'soap', 'sand', 'wax', 'sponge', 'ice'].every(name => source.includes(`${name}: {`))]
+  ,['material acceptance targets are visible', html.includes('id="materialAcceptance"') && source.includes('material.acceptance') && acceptance.includes('啤酒瓶')]
+  ,['breakable material lifecycle exists', source.includes('breakMaterialAtTap') && source.includes('spawnBreakFragments') && source.includes('materialBreakHits')]
+  ,['expanded material audio profiles exist', ['clear-bubble', 'rubber-balloon', 'glass-bottle', 'kinetic-sand', 'ice-crack'].every(name => source.includes(name))]
 ];
 
 const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);

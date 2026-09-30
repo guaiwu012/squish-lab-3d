@@ -9,7 +9,9 @@ const MAX_DEFORMATION_POINTS = 32;
 const SCENES = {
   all: { label: '全部场景' },
   studio: { label: '材质实验室' },
-  kitchen: { label: '厨房触感' }
+  kitchen: { label: '厨房触感' },
+  fragile: { label: '脆裂实验' },
+  craft: { label: '手作质地' }
 };
 
 const MATERIALS = {
@@ -17,29 +19,69 @@ const MATERIALS = {
     index: '01', scene: 'studio', soundProfile: 'sticky-foam', zh: '起泡胶', tag: '3D FOAM', title: ['Foam', 'Slime.'],
     copy: '封闭的柔软球体，气泡揉进表面。<br>揪住一点，整块胶会牵连变形。', feel: '蓬松',
     defaults: [78, 48, 68], color: 0xa9eb2e,
-    physics: { response: 38, release: 5.2, damping: 6.4, wobble: .72 },
+    physics: { response: 38, release: 5.2, damping: 6.4, wobble: .72 }, acceptance: '拉伸 20px 后，局部峰值跟手；松手 1.2–2.8s 回到 95% 体积。',
     aria: '真正的三维起泡胶球体。拖动表面局部塑形，拖动外圈旋转，双指拉伸。'
   },
   fruit: {
     index: '02', scene: 'kitchen', soundProfile: 'sugar-peel', zh: '水果', tag: '3D JUICY', title: ['Soft', 'Fruit.'],
     copy: '透明糖衣包住完整果肉，光线沿弧面滑动。<br>先敲碎糖衣，再慢慢拉开果肉。', feel: '多汁',
     defaults: [52, 66, 46], color: 0xe7244f,
-    physics: { response: 58, release: 8.4, damping: 8.2, wobble: .48 },
+    physics: { response: 58, release: 8.4, damping: 8.2, wobble: .48 }, acceptance: '每次敲击只掉 1 片；命中点误差 ≤ 8px；糖衣未碎前拉伸位移为 0。',
     aria: '真正的三维软水果。拖动表面局部塑形，拖动外圈旋转。'
   },
   bubble: {
     index: '03', scene: 'studio', soundProfile: 'plastic-pop', zh: '泡泡纸', tag: '3D POP', title: ['Bubble', 'Wrap.'],
     copy: '透明底板有真实厚度，每颗泡泡独立隆起。<br>点破一颗，看它向板内塌下。', feel: '清脆',
     defaults: [34, 88, 80], color: 0xbbefff,
-    physics: { response: 72, release: 16, damping: 12, wobble: .18 },
+    physics: { response: 72, release: 16, damping: 12, wobble: .18 }, acceptance: '连续点破 10 颗不重叠；每颗仅触发 1 个 pop，间隔 ≥ 80ms。',
     aria: '三维泡泡纸。点击立体气泡将它按破，拖动外圈旋转。'
   },
   jelly: {
     index: '04', scene: 'kitchen', soundProfile: 'wet-jelly', zh: '果冻', tag: '3D WOBBLE', title: ['Slow', 'Jelly.'],
     copy: '半透明体积会折射高光，也能看见背面。<br>松开手，重量还会多晃几拍。', feel: 'Q弹',
-    defaults: [88, 42, 36], color: 0xf348a7,
-    physics: { response: 30, release: 3.8, damping: 4.2, wobble: 1.32 },
+    defaults: [88, 42, 36], color: 0xf348a7, shape: [1.04, .96, 1.04], opacity: .66,
+    physics: { response: 30, release: 3.8, damping: 4.2, wobble: 1.32 }, acceptance: '慢拉 1s 只产生 1 个低频湿声；松手后 2.5–4.5s 完成回弹并有余晃。',
     aria: '真正的三维半透明果冻。拖动表面局部塑形，拖动外圈旋转。'
+  },
+  bubbleBall: {
+    index: '05', scene: 'studio', soundProfile: 'clear-bubble', zh: '透明泡泡', tag: '3D CLEAR', title: ['Clear', 'Bubble.'],
+    copy: '薄薄的透明膜会随手指变形。<br>轻轻戳破，泡泡会安静地塌掉。', feel: '轻盈', defaults: [76, 72, 44], color: 0xa9eaff, shape: [1, 1, 1], opacity: .3, breakMode: 'pop', breakHits: 1,
+    physics: { response: 46, release: 4.8, damping: 6.2, wobble: .82 }, acceptance: '拖动时膜厚视觉连续；点击 1 次后 0.35s 内塌陷，且不再接收拉伸。', aria: '三维透明泡泡。拖动会拉伸薄膜，点击可以戳破并重新开始。'
+  },
+  balloon: {
+    index: '06', scene: 'studio', soundProfile: 'rubber-balloon', zh: '气球', tag: '3D BALLOON', title: ['Rubber', 'Balloon.'],
+    copy: '橡胶膜会被拉薄、回弹。<br>戳一下，听它突然泄气。', feel: '弹韧', defaults: [64, 78, 56], color: 0xff5b78, shape: [.94, 1.08, .94], opacity: 1, breakMode: 'pop', breakHits: 1,
+    physics: { response: 50, release: 9.8, damping: 7.8, wobble: .7 }, acceptance: '拉伸越快橡胶擦声越亮；第 1 次点击触发泄气，0.6s 内完全消失。', aria: '三维橡胶气球。拖动拉伸，点击一次戳破。'
+  },
+  beer: {
+    index: '07', scene: 'fragile', soundProfile: 'glass-bottle', zh: '啤酒瓶', tag: '3D GLASS', title: ['Beer', 'Bottle.'],
+    copy: '硬玻璃先承受敲击，不会被直接拉开。<br>连续敲击三次，碎片从命中点掉落。', feel: '硬脆', defaults: [30, 58, 72], color: 0x5d9a63, shape: [.72, 1.18, .72], opacity: .82, breakMode: 'shatter', breakHits: 3,
+    physics: { response: 22, release: 2.4, damping: 10.5, wobble: .16 }, acceptance: '前 2 次敲击只留下轻微裂纹；第 3 次只掉命中区域碎片，碎裂前位移为 0。', aria: '三维啤酒瓶。敲击三次碎裂，碎裂前不能拉伸。'
+  },
+  soap: {
+    index: '08', scene: 'craft', soundProfile: 'waxy-soap', zh: '香皂', tag: '3D SOAP', title: ['Soft', 'Soap.'],
+    copy: '蜡质表面留下浅浅的按压痕迹。<br>慢慢推开，边缘会变钝。', feel: '蜡滑', defaults: [58, 54, 46], color: 0xf6c8d8, shape: [1.16, .82, .78], opacity: 1,
+    physics: { response: 34, release: 4.2, damping: 7.2, wobble: .28 }, acceptance: '快速按压不产生硬脆爆音；局部凹陷半径 ≤ 0.35 球体半径，松手 1.5–3.2s 恢复。', aria: '三维香皂。按压和拖动会留下柔和的变形。'
+  },
+  sand: {
+    index: '09', scene: 'craft', soundProfile: 'kinetic-sand', zh: '动力沙', tag: '3D SAND', title: ['Kinetic', 'Sand.'],
+    copy: '颗粒会塌落、堆积，不会像橡胶一样整体回弹。<br>拖动表面，留下切开的沟槽。', feel: '颗粒', defaults: [44, 28, 74], color: 0xd49a5b, shape: [1.12, .9, 1.12], opacity: 1,
+    physics: { response: 24, release: 1.8, damping: 12.5, wobble: .08 }, acceptance: '同一点拖动两次，沟槽宽度增量 ≤ 20%；松手后不整体弹回，边缘在 1s 内塌落。', aria: '三维动力沙。拖动会留下局部沟槽和塌落边缘。'
+  },
+  wax: {
+    index: '10', scene: 'craft', soundProfile: 'wax-crackle', zh: '蜡球', tag: '3D WAX', title: ['Wax', 'Crackle.'],
+    copy: '硬壳被敲出细裂纹，内部仍然柔软。<br>慢慢挤压，裂纹会停在局部。', feel: '干脆', defaults: [38, 38, 68], color: 0xffd783, shape: [1.03, 1.03, 1.03], opacity: 1, breakMode: 'crack', breakHits: 2,
+    physics: { response: 28, release: 3.2, damping: 9.8, wobble: .2 }, acceptance: '第 2 次敲击后出现 2–4 条局部裂纹；裂纹区域与命中点距离 ≤ 12px。', aria: '三维蜡球。敲击两次出现裂纹后，才能进行局部挤压。'
+  },
+  sponge: {
+    index: '11', scene: 'studio', soundProfile: 'sponge-squeeze', zh: '海绵', tag: '3D SPONGE', title: ['Porous', 'Sponge.'],
+    copy: '孔隙被压扁后缓慢恢复。<br>拉住一角，另一侧会跟着塌陷。', feel: '多孔', defaults: [82, 62, 82], color: 0xffd84f, shape: [1.02, .92, 1.02], opacity: 1,
+    physics: { response: 40, release: 4.4, damping: 7.8, wobble: .34 }, acceptance: '按压后 2–4s 恢复 90% 体积；拖动相邻点会产生可见联动，不穿出表面。', aria: '三维多孔海绵。按压、拉扯后会缓慢恢复体积。'
+  },
+  ice: {
+    index: '12', scene: 'fragile', soundProfile: 'ice-crack', zh: '冰块', tag: '3D ICE', title: ['Cold', 'Ice.'],
+    copy: '透明冰体会折射高光。<br>敲出裂纹后，碎面才允许被拉开。', feel: '脆冷', defaults: [22, 24, 86], color: 0x9bdcff, shape: [1.04, .96, 1.04], opacity: .48, breakMode: 'crack', breakHits: 2,
+    physics: { response: 18, release: 2.1, damping: 11.2, wobble: .06 }, acceptance: '第 2 次敲击产生 2–5 条亮裂纹；解锁前拖动位移为 0，解锁后拉伸上限 ≤ 0.16。', aria: '三维冰块。敲击两次产生裂纹，之后才能轻微拉伸。'
   }
 };
 
@@ -55,7 +97,7 @@ const state = {
   touchPoints: new Map(), pinchStartDistance: 0, pinchStartPull: 0, pinchStartAngle: 0, pinchStartRotationY: 0,
   deformationPoints: [], dualGrips: [],
   wheelTimer: 0, lastFrame: 0, popped: Array(42).fill(false), particles: [],
-  bubbleCandidate: -1, fruitShellCracked: false, fruitShellHits: 0,
+  bubbleCandidate: -1, fruitShellCracked: false, fruitShellHits: 0, materialBroken: false, materialBreakHits: 0,
   gestureCount: 0, releaseCount: 0, cancelCount: 0, activeAudioOutputs: 0, renderErrorReported: false
 };
 
@@ -64,6 +106,7 @@ const els = {
   number: document.getElementById('materialNumber'), copy: document.getElementById('materialCopy'),
   count: document.getElementById('pressCount'), feel: document.getElementById('feelLabel'),
   controlTitle: document.getElementById('controlTitle'), chip: document.getElementById('materialChip'),
+  acceptance: document.getElementById('materialAcceptance'),
   footerIndex: document.getElementById('footerIndex'), status: document.getElementById('interactionStatus'),
   hint: document.getElementById('gestureHint'), reset: document.getElementById('resetButton'),
   soundToggle: document.getElementById('soundToggle'), soundTop: document.getElementById('soundTop'),
@@ -259,6 +302,14 @@ function makeSurfaceMaterial(keyName) {
     color: MATERIALS.fruit.color, roughness: .32, clearcoat: .72, clearcoatRoughness: .16,
     bumpMap: fruitBump, bumpScale: .028
   });
+  if (keyName === 'bubbleBall') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .04, transmission: .92, thickness: .035, ior: 1.02, transparent: true, opacity: .3, clearcoat: 1, clearcoatRoughness: .04, side: THREE.DoubleSide, depthWrite: false });
+  if (keyName === 'balloon') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .2, metalness: .02, clearcoat: .78, clearcoatRoughness: .12 });
+  if (keyName === 'beer') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .12, transmission: .62, thickness: .2, ior: 1.5, transparent: true, opacity: .82, clearcoat: 1, clearcoatRoughness: .04, side: THREE.DoubleSide });
+  if (keyName === 'soap') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .36, clearcoat: .22, clearcoatRoughness: .3 });
+  if (keyName === 'sand') return new THREE.MeshStandardMaterial({ color: MATERIALS[keyName].color, roughness: .96, bumpMap: foamBump, bumpScale: .12 });
+  if (keyName === 'wax') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .5, clearcoat: .18, clearcoatRoughness: .28 });
+  if (keyName === 'sponge') return new THREE.MeshStandardMaterial({ color: MATERIALS[keyName].color, roughness: .88, bumpMap: foamBump, bumpScale: .18 });
+  if (keyName === 'ice') return new THREE.MeshPhysicalMaterial({ color: MATERIALS[keyName].color, roughness: .06, transmission: .9, thickness: .72, ior: 1.31, transparent: true, opacity: .48, clearcoat: 1, clearcoatRoughness: .03, side: THREE.DoubleSide, depthWrite: false });
   return new THREE.MeshPhysicalMaterial({
     color: MATERIALS.jelly.color, roughness: .08, metalness: 0, transmission: .42, thickness: 1.05,
     transparent: true, opacity: .66, ior: 1.36, clearcoat: 1, clearcoatRoughness: .1,
@@ -270,6 +321,7 @@ function buildSphere(keyName) {
   const geometry = new THREE.SphereGeometry(1.18, 72, 52);
   const positions = geometry.attributes.position;
   const temp = new THREE.Vector3();
+  const shape = MATERIALS[keyName]?.shape || [1, 1, 1];
   for (let i = 0; i < positions.count; i++) {
     temp.fromBufferAttribute(positions, i);
     if (keyName === 'fruit') {
@@ -281,6 +333,7 @@ function buildSphere(keyName) {
       temp.x *= 1.04; temp.z *= 1.04; temp.y *= .96;
       if (temp.y < -.73) temp.y = -.73 + (temp.y + .73) * .18;
     }
+    temp.multiply(new THREE.Vector3(shape[0], shape[1], shape[2]));
     positions.setXYZ(i, temp.x, temp.y, temp.z);
   }
   geometry.computeVertexNormals(); geometry.computeBoundingSphere();
@@ -289,6 +342,14 @@ function buildSphere(keyName) {
   surfaceMesh = new THREE.Mesh(geometry, surfaceMaterial);
   surfaceMesh.castShadow = true; surfaceMesh.receiveShadow = true; surfaceMesh.userData.surface = true;
   modelRoot.add(surfaceMesh); interactiveMeshes = [surfaceMesh];
+
+  if (keyName === 'beer') {
+    const bottleGlass = new THREE.MeshPhysicalMaterial({ color: 0x314d28, roughness: .18, transmission: .35, thickness: .12, transparent: true, opacity: .68, side: THREE.DoubleSide });
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(.17, .23, .48, 32), bottleGlass);
+    neck.position.y = 1.48; neck.castShadow = true; neck.userData.bottleDetail = true; modelRoot.add(neck);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(.18, .035, 12, 32), bottleGlass);
+    lip.position.y = 1.72; lip.rotation.x = Math.PI / 2; lip.userData.bottleDetail = true; modelRoot.add(lip);
+  }
 
   if (keyName === 'fruit') {
     fruitShellDamageCanvas = document.createElement('canvas'); fruitShellDamageCanvas.width = 1024; fruitShellDamageCanvas.height = 512;
@@ -367,6 +428,47 @@ function buildMaterial(keyName) {
   modelRoot.rotation.set(state.rotationX, state.rotationY, 0);
 }
 
+function materialLocked() {
+  if (state.material === 'fruit') return !state.fruitShellCracked;
+  const profile = MATERIALS[state.material];
+  return Boolean(profile?.breakMode && ['beer', 'wax', 'ice'].includes(state.material) && !state.materialBroken);
+}
+
+function spawnBreakFragments(count = 8) {
+  const origin = modelRoot.localToWorld(state.grabPoint.clone());
+  const color = MATERIALS[state.material]?.color || 0xffffff;
+  for (let index = 0; index < count; index++) {
+    const material = new THREE.MeshPhysicalMaterial({ color, roughness: .2 + Math.random() * .3, transparent: true, opacity: .78, transmission: state.material === 'ice' ? .35 : .06 });
+    const mesh = new THREE.Mesh(new THREE.TetrahedronGeometry(.055 + Math.random() * .07, 0), material);
+    mesh.position.copy(origin).add(new THREE.Vector3((Math.random() - .5) * .08, (Math.random() - .5) * .08, (Math.random() - .5) * .08));
+    particlesRoot.add(mesh);
+    state.particles.push({ mesh, velocity: new THREE.Vector3((Math.random() - .5) * 1.25, .18 + Math.random() * .92, (Math.random() - .5) * 1.25), angularVelocity: new THREE.Vector3((Math.random() - .5) * 3, (Math.random() - .5) * 3, (Math.random() - .5) * 3), life: 1.1 + Math.random() * .8 });
+  }
+}
+
+function breakMaterialAtTap() {
+  const profile = MATERIALS[state.material];
+  if (!profile?.breakMode || state.materialBroken) return false;
+  state.materialBreakHits++;
+  const required = profile.breakHits || 1;
+  if (state.materialBreakHits < required) {
+    sound('press', .38 + state.materialBreakHits * .12);
+    els.status.textContent = `${profile.zh}还很硬，再敲 ${required - state.materialBreakHits} 次`;
+    return true;
+  }
+  state.materialBroken = true;
+  if (state.material === 'balloon' || state.material === 'bubbleBall') {
+    if (surfaceMesh) surfaceMesh.visible = false;
+  } else if (surfaceMaterial) {
+    surfaceMaterial.transparent = true;
+    surfaceMaterial.opacity = state.material === 'beer' ? .18 : .28;
+  }
+  spawnBreakFragments(state.material === 'beer' ? 14 : 7);
+  sound('crack', state.material === 'beer' ? 1.05 : .82);
+  els.status.textContent = `${profile.zh}已${profile.breakMode === 'shatter' ? '碎裂' : profile.breakMode === 'crack' ? '裂开' : '戳破'}`;
+  return true;
+}
+
 function registerPress() {
   state.presses++; els.count.textContent = String(state.presses).padStart(2, '0');
   els.hint.classList.add('is-hidden');
@@ -375,7 +477,8 @@ function registerPress() {
 function resetPhysics(resetRotation = true) {
   state.pointerId = null; state.mode = ''; state.moved = false; state.targetPress = state.press = state.pressVelocity = 0;
   state.currentPull.set(0, 0, 0); state.targetPull.set(0, 0, 0); state.pullVelocity.set(0, 0, 0);
-  state.grabDir.set(0, 0, 1); state.grabUv.set(.5, .5);
+  state.grabDir.set(0, 0, 1); state.grabPoint.set(0, 0, 1.18); state.grabUv.set(.5, .5);
+  state.materialBroken = false; state.materialBreakHits = 0;
   state.deformationPoints.length = 0; state.dualGrips.length = 0;
   state.touchPoints.clear(); state.pinchStartDistance = 0; state.pinchStartPull = 0; state.pinchStartAngle = 0; state.pinchStartRotationY = 0;
   clearTimeout(state.wheelTimer); state.wheelTimer = 0; state.wobble = 0;
@@ -396,6 +499,7 @@ function setMaterial(keyName, announce = true) {
   els.title.innerHTML = `<span>${material.title[0]}</span><em>${material.title[1]}</em>`;
   els.copy.innerHTML = material.copy; els.feel.textContent = material.feel;
   els.controlTitle.textContent = material.zh; els.chip.textContent = material.tag;
+  if (els.acceptance) els.acceptance.textContent = `验收目标：${material.acceptance || '局部形变跟手，声音随应变变化。'}`;
   els.footerIndex.textContent = `${material.index} / ${String(Object.keys(MATERIALS).length).padStart(2, '0')}`; canvas.setAttribute('aria-label', material.aria);
   els.sliders.forEach((slider, index) => { slider.value = material.defaults[index]; updateSlider(slider); });
   buildMaterial(keyName); state.wobble = .4;
@@ -408,6 +512,8 @@ function resetMaterial() {
   if (fruitShellDamageTexture) fruitShellDamageTexture.needsUpdate = true;
   if (fruitShell) fruitShell.material.opacity = .56;
   if (fruitShell) { fruitShell.visible = true; fruitShell.position.set(0, 0, 0); }
+  if (surfaceMesh) surfaceMesh.visible = true;
+  if (surfaceMaterial) surfaceMaterial.opacity = MATERIALS[state.material]?.opacity ?? 1;
   state.popped.fill(false); state.presses = 0; els.count.textContent = '00';
   bubbleMeshes.forEach(bubble => { bubble.userData.targetZ = .58; bubble.scale.z = .58; bubble.position.z = .105; });
   els.status.textContent = `${MATERIALS[state.material].zh}已完整复原`;
@@ -523,6 +629,41 @@ function sound(kind, force = 1) {
     noise(audio, master, .03 + pop * .04, .38 + pop * .3, 'bandpass', 1300 + grain * 1800 + pop * 1500, 1.15 + pop * 2.1);
     microCrackles(audio, master, 2 + Math.floor(Math.random() * 4), 2400 + grain * 2200 + pop * 1800, .07 + pop * .06);
     tone(audio, master, 250 + pop * 260, 88 + pop * 90, .055 + pop * .045, .1 + pop * .09);
+    return;
+  }
+  if (state.material === 'bubbleBall') {
+    if (kind === 'drag') {
+      noise(audio, master, .12 + force * .08, .045 + force * .025, 'highpass', 1450 + grain * 1200, 1.5);
+      return;
+    }
+    if (kind === 'crack') { noise(audio, master, .045, .22, 'highpass', 2800 + grain * 1600, 2.6); noise(audio, master, .22, .045, 'lowpass', 170, .7, .04); return; }
+    noise(audio, master, .08, .12, 'bandpass', 760 + grain * 260, 1.2);
+    return;
+  }
+  if (state.material === 'balloon') {
+    if (kind === 'drag') { modulatedNoise(audio, master, .18 + force * .16, .065 + force * .04, 210 + grain * 180, 38, 2.2); return; }
+    if (kind === 'crack') { noise(audio, master, .028, .3, 'highpass', 3600 + grain * 1500, 2.2); noise(audio, master, .4, .08, 'lowpass', 150, .5, .03); return; }
+    noise(audio, master, .06, .08, 'bandpass', 420 + grain * 220, 1.1);
+    return;
+  }
+  if (state.material === 'beer') {
+    if (kind === 'crack') { microCrackles(audio, master, 5 + Math.floor(Math.random() * 4), 2500 + grain * 1700, .09 + force * .04); noise(audio, master, .2, .04, 'lowpass', 180, .7, .05); return; }
+    noise(audio, master, .045, .09 + force * .04, 'bandpass', 880 + grain * 420, 2.2);
+    return;
+  }
+  if (state.material === 'ice') {
+    if (kind === 'crack') { microCrackles(audio, master, 3 + Math.floor(Math.random() * 3), 3600 + grain * 1700, .08 + force * .05); return; }
+    noise(audio, master, .08, .055 + force * .025, 'highpass', 1800 + grain * 1000, 2.5);
+    return;
+  }
+  if (state.material === 'soap' || state.material === 'sand' || state.material === 'wax' || state.material === 'sponge') {
+    if (kind === 'drag') {
+      const base = state.material === 'sand' ? 250 : state.material === 'sponge' ? 180 : 330;
+      noise(audio, master, .18 + force * .1, .045 + force * .03, state.material === 'sand' ? 'bandpass' : 'lowpass', base + grain * 190, 1.1);
+      if (state.material === 'wax' && force > .62) microCrackles(audio, master, 1 + Math.floor(Math.random() * 2), 1900 + grain * 1700, .025 + force * .02);
+      return;
+    }
+    noise(audio, master, .11, .075 + force * .025, 'bandpass', state.material === 'sponge' ? 190 : 300 + grain * 160, 1.2);
     return;
   }
   if (state.material === 'jelly') {
@@ -697,8 +838,8 @@ function pointerMove(event) {
     const totalX = event.clientX - state.startX; const totalY = event.clientY - state.startY;
     if (Math.hypot(totalX, totalY) > 5) { state.moved = true; state.targetPress = 0; }
     if (state.moved && surfaceMesh) {
-      if (state.material === 'fruit' && !state.fruitShellCracked) {
-        state.targetPull.set(0, 0, 0); els.status.textContent = '糖衣很硬，先敲碎它';
+      if (materialLocked()) {
+        state.targetPull.set(0, 0, 0); els.status.textContent = state.material === 'fruit' ? '糖衣很硬，先敲碎它' : `${MATERIALS[state.material].zh}很硬，先敲开它`;
       } else {
         state.targetPull.copy(screenPullToLocal(totalX, totalY));
         els.status.textContent = '正在改变三维网格'; sound('drag', dragSoundForce(.16));
@@ -726,16 +867,18 @@ function releasePointer(event) {
   state.releaseCount++;
   if (state.material === 'bubble' && state.mode === 'grab' && !state.moved) popBubble(state.bubbleCandidate);
   const shellTap = state.material === 'fruit' && state.mode === 'grab' && !state.moved;
+  const breakTap = state.mode === 'grab' && !state.moved && state.material !== 'fruit' && MATERIALS[state.material]?.breakMode;
   if (shellTap) {
     const releaseHit = hitTest(event.clientX, event.clientY);
     if (releaseHit) setGrabFromHit(releaseHit);
     crackFruitShell(state.grabDir, state.grabUv);
   }
+  if (breakTap) breakMaterialAtTap();
   const wasMode = state.mode; const releaseForce = releaseSoundForce();
   if (wasMode === 'grab' || (wasMode === 'pinch' && !state.dualGrips.length)) preserveCurrentPull();
   state.mode = ''; state.pointerId = null; state.targetPress = 0; state.targetPull.set(0, 0, 0);
   state.wobble = .25 + values()[1] * (1.1 + MATERIALS[state.material].physics.wobble * .9); if (!shellTap) sound('release', releaseForce);
-  els.status.textContent = shellTap ? '' : state.material === 'fruit' && !state.fruitShellCracked && wasMode === 'grab' && state.moved
+  if (!breakTap) els.status.textContent = shellTap ? '' : state.material === 'fruit' && !state.fruitShellCracked && wasMode === 'grab' && state.moved
     ? '糖衣很硬，先敲碎它'
     : wasMode === 'rotate' ? `${MATERIALS[state.material].zh}已转到新角度` : `${MATERIALS[state.material].zh}正在慢慢回弹`;
   if (shellTap) clearInteractionStatus();
@@ -866,7 +1009,7 @@ function deformSurface() {
   const [softness, , texture] = values();
   // Softness changes both the size of the affected patch and how far the material follows the finger.
   const sigma = .045 + softness * .19; const pullGain = .78 + softness * .52; const direction = new THREE.Vector3();
-  const shellLocked = state.material === 'fruit' && !state.fruitShellCracked;
+  const shellLocked = materialLocked();
   const fields = shellLocked ? [] : deformationFields();
   let changed = false;
   for (let index = 0; index < attribute.count; index++) {
@@ -1074,7 +1217,7 @@ function animate(time) {
     });
     state.wobble *= reducedMotion ? .55 : .94 + bounce * .045;
     const wobble = reducedMotion ? 0 : Math.sin(time * (.006 + bounce * .006)) * state.wobble * (.028 + bounce * .085);
-    const shellLocked = state.material === 'fruit' && !state.fruitShellCracked;
+    const shellLocked = materialLocked();
     const effectivePress = shellLocked ? 0 : state.press;
     const compression = 1 - effectivePress * (.12 + values()[0] * .12);
     modelRoot.scale.set((1 / Math.sqrt(compression)) * (1 + wobble * .35), compression * (1 - wobble), (1 / Math.sqrt(compression)) * (1 + wobble * .2));
